@@ -288,7 +288,7 @@ alert tcp any any -> any any (msg:"Mon nom!"; content:"Rubinstein"; sid:4000015;
 
 ---
 
-**Reponse :**  
+**Reponse :**  Cette régle va écrire dans les logs, lorsque le contenu "Rubinstein" est detecté dans le paquet. Lorsque Snort detectera un paquet TCP correspondant aux critères, il va insérer une entrée dans les logs qui aura comme titre "Mon nom!". 
 
 ---
 
@@ -302,7 +302,9 @@ sudo snort -c myrules.rules -i eth0
 
 ---
 
-**Reponse :**  
+**Reponse :**  La régle pour détecter le mot "Suisse" est la suivante : 
+
+`tcp any any -> any any (msg:"Mon nom!"; content:"Suisse"; sid:4000015; rev:1;)`
 
 ---
 
@@ -312,7 +314,15 @@ Aller à un site web contenant votre nom ou votre mot clé que vous avez choisi 
 
 ---
 
-**Reponse :**  
+**Reponse :**  Nous pouvons remarquer différentes statistiques sur les paquets que snort a analysés. Ces dernières sont groupées par protocole. Le nombre de paquet en entrée et en sortie est également dénombré. Il y a également des statistiques sur les actions effectuées par snort (nombre bloqués, nombre d'alerte, etc.).
+
+Ci-dessous, une capture d'écran présentant un exemple de statistique sur les actions entreprises par snort:
+
+![](./images_rendu/snort_exiting_stats.png)
+
+
+
+Nous pouvons remarquer que 11 alerts ont été relevées par snort selon les régles mises en vigueur par nos soins.
 
 ---
 
@@ -324,8 +334,30 @@ Aller au répertoire /var/log/snort. Ouvrir le fichier `alert`. Vérifier qu'il 
 
 **Reponse :**  
 
----
+Ci-dessous, une capture d'écran présantant les alertes contenus dans le fichier alert sous /var/log/snort : 
 
+![](./images_rendu/mot_suisse_trouve.png)
+
+Ci-dessous, une liste des champs ainsi que leur utilité : 
+
+- Le SID de la régles qui a relevé l'alerte.
+- Le message de l'alerte, ici "Mot trouve !"
+- La priorité qui indique la prorité de l'alerte.
+- Le timestamp de quand l'alerte a été relevée.
+- L'adresse IP source et destination du paquet.
+- Le type, ici TCP
+- Le TTL (Time-to-live qui est de 64 ici)
+- Le TOS (Type-of-Service, ici 0)
+- l'ID qui est ici de 20
+- La longueur de l'entête IP (IpLen, ici 20).
+- La longueur totale du paquet vu par la couche IP (DgmLen, ici 59).
+- Seq, qui correspond au numéro de séquence TCP
+- Le Ack est le numéro de "l'acusé de réception"
+- Le Win représente la taille de la fenêtre
+- Le TcpLen représente la longueur du paquet TCP.
+- TCP Options indique toutes les options du paquet TCP.
+
+---
 
 --
 
@@ -338,6 +370,18 @@ Ecrire une règle qui journalise (sans alerter) un message à chaque fois que Wi
 ---
 
 **Reponse :**  
+
+Voici notre régle : 
+
+`log 10.192.180.27 any -> 97.198.174.192 any (msg:"Wikiepdia a ete acceder"; sid:400014;rev:1;) `
+
+L'adresse *97.198.174.192* est l'adresse IP du serveur web Wikipedia. 
+
+Il est journalisé dans un fichier log contenu dans /var/log/snort/snort.log***
+
+Voici un exemple de ce qui a été capturé (une des requête HTTP) : 
+
+![](./images_rendu/wikipedia.png)
 
 ---
 
@@ -353,6 +397,34 @@ Ecrire une règle qui alerte à chaque fois que votre système reçoit un ping d
 
 **Reponse :**  
 
+Voici notre régle :
+
+`alert icmp any any -> 10.192.106.107 any (msg:"Somebody tries to ping your machine!";itype:8; sid:400015;) `
+
+*itype:8* permet de définir le code que l'on souhaite observer. Dans ce cas, le 8 correspond à *ECHO REQUEST*. 
+
+L'adresse 10.192.106.107 correspond à ma machine.
+
+Ci-dessous, une capture d'écran du fichier /var/log/snort/alert où sont stockées les alertes : 
+
+![](./images_rendu/ping_entrant_detection.png)
+
+Ci-dessous, une description des champs que l'on peut retrouver dans les alertes : 
+
+- Numéro du SID
+- Message de l'alerte
+- Le niveau de priorité
+- Le timestamp à laquelle l'alerte a été notée
+- L'adresse IP source -> l'adresse ip destination
+- Le protocol (dans ce cas ICMP)
+- Le TTL (Time-To-Live, ici 63)
+- Le TOS (Type of Service, ici 0)
+- L'ID de l'alerte
+- La longueur de l'entête IP (IpLen, ici 20).
+- La longueur totale du paquet vu par la couche IP (DgmLen, ici 84).
+- le Type (ici 8, qui correspond à l'*ECHO REQUEST*)
+- Le numéro de séquence TCP (ici 6)
+
 ---
 
 --
@@ -367,6 +439,16 @@ Modifier votre règle pour que les pings soient détectés dans les deux sens.
 
 **Reponse :**  
 
+Nous avons modifié le sens de la fléche pour indiquer la détection bidirectionnelle du ping. Dans ce cas, nous avons laissé le *itype:8* qui permet de surveiller les requêtes ICMP de type *ECHO REQUEST*, si nous souhaitons tous les types, il faut supprimer cette option.
+
+`alert icmp any any <> 10.192.106.107 any (msg:"Ping from/to ";itype:8; sid:400015;) `
+
+Ci-dessous, une capture d'écran présentant la détéction de différents pings : 
+
+![](./images_rendu/ping_bidirectionnel.png)
+
+
+
 ---
 
 
@@ -380,7 +462,13 @@ Essayer d'écrire une règle qui Alerte qu'une tentative de session SSH a été 
 
 ---
 
-**Reponse :**  
+**Reponse :**  La règle utilisée est la suivante:
+
+`alert tcp 192.168.108.157 any -> any 22 (msg:"SSH DETECTED";sid:300015;rev:1;) `
+
+Elle va permettre de détecter toutes les tentatives de connexions SSH de la part du voisin sur n'importe quelle machine. Elle créera une alerte dont le message sera "SSH DETECTED".
+
+![](./images_rendu/ssh_detected.png)
 
 ---
 
@@ -394,7 +482,11 @@ Lancer Wireshark et faire une capture du trafic sur l'interface connectée au br
 
 ---
 
-**Reponse :**  
+**Reponse :**  L'option `--pcap-single` permet d'analyser les logs. 
+
+Ci-dessous, un exemple d'utilisation:
+
+`snort --pcap-single=myfile.pcap -c myrules.rules`
 
 ---
 
@@ -405,6 +497,8 @@ Utiliser l'option correcte de Snort pour analyser le fichier de capture Wireshar
 ---
 
 **Reponse :**  
+
+En analysant la capture Wireshark avec snort, les alertes sont quand même journalisées dans le fichier fichier correspondant *alert ou log*. Snort va se lancer comme une analyse en temps réelle et se fermer à la fin de l'analyse. Il présentera les statistiques comme à chaque fin d'execution de Snort.
 
 ---
 
