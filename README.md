@@ -288,7 +288,7 @@ alert tcp any any -> any any (msg:"Mon nom!"; content:"Rubinstein"; sid:4000015;
 
 ---
 
-**Reponse :**  Cette régle va écrire dans les logs, lorsque le contenu "Rubinstein" est detecté dans le paquet. Lorsque Snort detectera un paquet TCP correspondant aux critères, il va insérer une entrée dans les logs qui aura comme titre "Mon nom!". 
+**Reponse :**  Cette régle va écrire dans le fichier des alertes, lorsque le contenu "Rubinstein" est detecté dans le paquet. Lorsque Snort detectera un paquet TCP correspondant aux critères, il va insérer une entrée dans le fichier *alert* qui aura comme titre "Mon nom!". 
 
 ---
 
