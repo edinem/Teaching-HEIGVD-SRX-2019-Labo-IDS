@@ -482,11 +482,11 @@ Lancer Wireshark et faire une capture du trafic sur l'interface connectée au br
 
 ---
 
-**Reponse :**  L'option `--pcap-single` permet d'analyser les logs. 
+**Reponse :**  L'option `-r` permet d'analyser les logs. 
 
 Ci-dessous, un exemple d'utilisation:
 
-`snort --pcap-single=myfile.pcap -c myrules.rules`
+`snort -r myfile.pcap -c myrules.rules`
 
 ---
 
